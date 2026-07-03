@@ -2,10 +2,41 @@
 
 from __future__ import annotations
 
-from custom_components.teams_workflow_notify.card import (
-    build_rich_card_payload,
-    build_simple_card_payload,
-)
+import importlib.util
+import sys
+import types
+from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parents[1] / "custom_components" / "teams_workflow_notify"
+_PKG_NAME = "custom_components.teams_workflow_notify"
+
+
+def _load_card_module():
+    custom_components_pkg = types.ModuleType("custom_components")
+    custom_components_pkg.__path__ = [str(_ROOT.parent)]
+    sys.modules["custom_components"] = custom_components_pkg
+
+    pkg = types.ModuleType(_PKG_NAME)
+    pkg.__path__ = [str(_ROOT)]
+    sys.modules[_PKG_NAME] = pkg
+
+    const_spec = importlib.util.spec_from_file_location(f"{_PKG_NAME}.const", _ROOT / "const.py")
+    const_mod = importlib.util.module_from_spec(const_spec)
+    sys.modules[f"{_PKG_NAME}.const"] = const_mod
+    assert const_spec.loader is not None
+    const_spec.loader.exec_module(const_mod)
+
+    card_spec = importlib.util.spec_from_file_location(f"{_PKG_NAME}.card", _ROOT / "card.py")
+    card_mod = importlib.util.module_from_spec(card_spec)
+    sys.modules[f"{_PKG_NAME}.card"] = card_mod
+    assert card_spec.loader is not None
+    card_spec.loader.exec_module(card_mod)
+    return card_mod
+
+
+_CARD = _load_card_module()
+build_rich_card_payload = _CARD.build_rich_card_payload
+build_simple_card_payload = _CARD.build_simple_card_payload
 
 
 def _card_content(payload: dict) -> dict:
