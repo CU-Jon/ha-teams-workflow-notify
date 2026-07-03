@@ -174,6 +174,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     from .client import TeamsWorkflowNotifyClient
 
+    hass.data.setdefault(DOMAIN, {})
+
     session = async_get_clientsession(hass)
     runtime = TeamsWorkflowNotifyRuntimeData(
         entry_id=entry.entry_id,

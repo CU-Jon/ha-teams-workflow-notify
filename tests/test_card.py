@@ -23,6 +23,8 @@ def test_simple_card_includes_title_and_message() -> None:
     content = _card_content(payload)
     assert payload["type"] == "message"
     assert content["body"][0]["text"] == "Garage Door"
+    assert content["body"][0]["weight"] == "bolder"
+    assert content["body"][0]["size"] == "medium"
     assert content["body"][1]["text"] == "Garage has been open for 20 minutes."
 
 
@@ -63,7 +65,23 @@ def test_severity_warning_maps_to_warning_color() -> None:
     )
 
     content = _card_content(payload)
-    assert content["body"][0]["color"] == "Warning"
+    assert content["body"][0]["color"] == "warning"
+
+
+def test_subtitle_uses_small_size() -> None:
+    payload = build_rich_card_payload(
+        title="Garage Door",
+        message="Garage has been open for 20 minutes.",
+        subtitle="Home Assistant",
+        severity="default",
+        facts=None,
+        actions=None,
+        adaptive_card_version="1.2",
+        full_width=True,
+    )
+
+    content = _card_content(payload)
+    assert content["body"][0]["size"] == "small"
 
 
 def test_facts_render_as_factset() -> None:

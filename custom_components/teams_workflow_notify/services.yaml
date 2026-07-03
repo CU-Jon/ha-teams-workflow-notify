@@ -33,7 +33,11 @@ send_card:
           value: cover.garage_door
         - title: Time
           value: 10:42 PM
+      selector:
+        object:
     actions:
       example:
         - title: Open Home Assistant
           url: https://ha.example.com/lovelace/security
+      selector:
+        object:

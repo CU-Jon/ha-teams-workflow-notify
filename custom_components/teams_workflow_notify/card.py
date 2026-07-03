@@ -23,10 +23,10 @@ _CONTENT_TYPE = "application/vnd.microsoft.card.adaptive"
 
 _SEVERITY_TO_COLOR: dict[str, str | None] = {
     SEVERITY_DEFAULT: None,
-    SEVERITY_INFO: "Accent",
-    SEVERITY_SUCCESS: "Good",
-    SEVERITY_WARNING: "Warning",
-    SEVERITY_ERROR: "Attention",
+    SEVERITY_INFO: "accent",
+    SEVERITY_SUCCESS: "good",
+    SEVERITY_WARNING: "warning",
+    SEVERITY_ERROR: "attention",
 }
 
 
@@ -86,8 +86,8 @@ def build_simple_card_payload(
             {
                 "type": "TextBlock",
                 "text": title_text,
-                "weight": "Bolder",
-                "size": "Medium",
+                "weight": "bolder",
+                "size": "medium",
                 "wrap": True,
             }
         )
@@ -132,7 +132,7 @@ def build_rich_card_payload(
                 "type": "TextBlock",
                 "text": subtitle_text,
                 "isSubtle": True,
-                "size": "Small",
+                "size": "small",
                 "wrap": True,
                 "spacing": "None",
             }
@@ -143,8 +143,8 @@ def build_rich_card_payload(
         title_block: dict[str, Any] = {
             "type": "TextBlock",
             "text": title_text,
-            "weight": "Bolder",
-            "size": "Medium",
+            "weight": "bolder",
+            "size": "medium",
             "wrap": True,
         }
         color = _SEVERITY_TO_COLOR[severity]
