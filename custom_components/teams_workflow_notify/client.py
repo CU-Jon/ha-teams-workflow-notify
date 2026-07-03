@@ -71,7 +71,7 @@ class TeamsWorkflowNotifyClient:
             async with self._session.post(
                 self._webhook_url,
                 json=payload,
-                headers={"Content-Type": "application/json"},
+                headers={"Content-Type": "application/json", "Connection": "close"},
                 timeout=timeout,
             ) as response:
                 response_text = await response.text()
@@ -80,12 +80,24 @@ class TeamsWorkflowNotifyClient:
                 f"Timed out contacting webhook at {self._redacted_url}"
             ) from err
         except ClientConnectionError as err:
+            _LOGGER.warning(
+                "Connection error sending webhook to %s: %s: %s",
+                self._redacted_url,
+                err.__class__.__name__,
+                err,
+            )
             raise TeamsWorkflowConnectionError(
-                f"Could not connect to webhook at {self._redacted_url}"
+                f"Could not connect to webhook at {self._redacted_url} ({err.__class__.__name__}: {err})"
             ) from err
         except ClientError as err:
+            _LOGGER.warning(
+                "HTTP client error sending webhook to %s: %s: %s",
+                self._redacted_url,
+                err.__class__.__name__,
+                err,
+            )
             raise TeamsWorkflowConnectionError(
-                f"Webhook request failed for {self._redacted_url}: {err.__class__.__name__}"
+                f"Webhook request failed for {self._redacted_url}: {err.__class__.__name__}: {err}"
             ) from err
         except ValueError as err:
             raise TeamsWorkflowNotifyError("Payload serialization failed") from err

@@ -232,7 +232,7 @@ class TeamsWorkflowNotifyOptionsFlow(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
+        self._config_entry = config_entry
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Manage the integration options."""
@@ -258,10 +258,10 @@ class TeamsWorkflowNotifyOptionsFlow(config_entries.OptionsFlow):
                 errors["base"] = "unknown"
             else:
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry,
+                    self._config_entry,
                     title=normalized[CONF_ENTITY_NAME],
                     data={
-                        **self.config_entry.data,
+                        **self._config_entry.data,
                         CONF_WEBHOOK_URL: normalized[CONF_WEBHOOK_URL],
                     },
                 )
@@ -275,23 +275,23 @@ class TeamsWorkflowNotifyOptionsFlow(config_entries.OptionsFlow):
                 )
 
         defaults = {
-            CONF_WEBHOOK_URL: self.config_entry.data[CONF_WEBHOOK_URL],
+            CONF_WEBHOOK_URL: self._config_entry.data[CONF_WEBHOOK_URL],
             CONF_ENTITY_NAME: _get_entry_value(
-                self.config_entry, CONF_ENTITY_NAME, DEFAULT_ENTITY_NAME
+                self._config_entry, CONF_ENTITY_NAME, DEFAULT_ENTITY_NAME
             ),
             CONF_DEFAULT_CARD_TITLE: _get_entry_value(
-                self.config_entry, CONF_DEFAULT_CARD_TITLE, DEFAULT_CARD_TITLE
+                self._config_entry, CONF_DEFAULT_CARD_TITLE, DEFAULT_CARD_TITLE
             ),
             CONF_ADAPTIVE_CARD_VERSION: _get_entry_value(
-                self.config_entry,
+                self._config_entry,
                 CONF_ADAPTIVE_CARD_VERSION,
                 DEFAULT_ADAPTIVE_CARD_VERSION,
             ),
             CONF_FULL_WIDTH: _get_entry_value(
-                self.config_entry, CONF_FULL_WIDTH, DEFAULT_FULL_WIDTH
+                self._config_entry, CONF_FULL_WIDTH, DEFAULT_FULL_WIDTH
             ),
             CONF_VERIFY_WEBHOOK: _get_entry_value(
-                self.config_entry, CONF_VERIFY_WEBHOOK, DEFAULT_VERIFY_WEBHOOK
+                self._config_entry, CONF_VERIFY_WEBHOOK, DEFAULT_VERIFY_WEBHOOK
             ),
         }
 
