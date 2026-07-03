@@ -1,0 +1,39 @@
+send_card:
+  target:
+    entity:
+      domain: notify
+  fields:
+    title:
+      example: Garage Door
+      selector:
+        text:
+    message:
+      required: true
+      example: Garage has been open for 20 minutes.
+      selector:
+        text:
+          multiline: true
+    subtitle:
+      example: Home Assistant
+      selector:
+        text:
+    severity:
+      default: default
+      selector:
+        select:
+          options:
+            - default
+            - info
+            - success
+            - warning
+            - error
+    facts:
+      example:
+        - title: Entity
+          value: cover.garage_door
+        - title: Time
+          value: 10:42 PM
+    actions:
+      example:
+        - title: Open Home Assistant
+          url: https://ha.example.com/lovelace/security

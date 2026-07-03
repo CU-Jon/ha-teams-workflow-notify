@@ -1,0 +1,14 @@
+{
+  "domain": "teams_workflow_notify",
+  "name": "Microsoft Teams Workflow Notify",
+  "codeowners": [
+    "@CU-Jon"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/CU-Jon/ha-teams-workflow-notify",
+  "issue_tracker": "https://github.com/CU-Jon/ha-teams-workflow-notify/issues",
+  "integration_type": "service",
+  "iot_class": "cloud_push",
+  "requirements": [],
+  "version": "0.1.0"
+}
