@@ -1,9 +1,6 @@
 {
   "name": "Microsoft Teams Workflow Notify",
   "content_in_root": false,
-  "domains": [
-    "teams_workflow_notify"
-  ],
   "homeassistant": "2025.1.0",
   "render_readme": true
 }

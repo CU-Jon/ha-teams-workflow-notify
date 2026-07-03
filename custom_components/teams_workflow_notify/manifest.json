@@ -6,9 +6,9 @@
   ],
   "config_flow": true,
   "documentation": "https://github.com/CU-Jon/ha-teams-workflow-notify",
-  "issue_tracker": "https://github.com/CU-Jon/ha-teams-workflow-notify/issues",
   "integration_type": "service",
   "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/CU-Jon/ha-teams-workflow-notify/issues",
   "requirements": [],
   "version": "0.1.0"
 }

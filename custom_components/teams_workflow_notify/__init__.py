@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.helpers import config_validation as cv
+
 from .const import (
     ATTR_ACTIONS,
     ATTR_ACTION_URL,
@@ -30,6 +32,8 @@ from .const import (
 )
 from .coordinator import TeamsWorkflowNotifyRuntimeData
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant, ServiceCall
@@ -47,7 +51,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     from homeassistant.const import ATTR_ENTITY_ID
     from homeassistant.exceptions import ServiceValidationError
-    from homeassistant.helpers import config_validation as cv
     from homeassistant.helpers import entity_registry as er
 
     from .client import validate_http_url
