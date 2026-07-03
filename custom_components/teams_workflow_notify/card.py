@@ -134,7 +134,7 @@ def build_rich_card_payload(
                 "isSubtle": True,
                 "size": "small",
                 "wrap": True,
-                "spacing": "None",
+                "spacing": "none",
             }
         )
 
