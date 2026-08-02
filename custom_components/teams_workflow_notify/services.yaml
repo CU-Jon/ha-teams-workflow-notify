@@ -2,6 +2,7 @@ send_card:
   target:
     entity:
       domain: notify
+      integration: teams_workflow_notify
   fields:
     title:
       example: Garage Door
@@ -21,6 +22,7 @@ send_card:
       default: default
       selector:
         select:
+          translation_key: severity
           options:
             - default
             - info
@@ -41,3 +43,21 @@ send_card:
           url: https://ha.example.com/lovelace/security
       selector:
         object:
+    image_url:
+      example: /local/snapshots/front-door.jpg
+      selector:
+        text:
+          multiline: true
+    image_delivery:
+      default: auto
+      selector:
+        select:
+          translation_key: image_delivery
+          options:
+            - auto
+            - url
+            - inline
+    image_alt_text:
+      example: Front door camera snapshot
+      selector:
+        text:

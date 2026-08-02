@@ -6,10 +6,11 @@ from collections.abc import Iterable
 from typing import Any
 
 from .const import (
-    ATTR_ACTIONS,
+    ADAPTIVE_CARD_VERSION,
     ATTR_ACTION_URL,
-    ATTR_FACTS,
+    ATTR_ACTIONS,
     ATTR_FACT_VALUE,
+    ATTR_FACTS,
     SEVERITIES,
     SEVERITY_DEFAULT,
     SEVERITY_ERROR,
@@ -38,12 +39,12 @@ def _clean_text(value: str | None) -> str | None:
     return cleaned or None
 
 
-def _base_card(adaptive_card_version: str, full_width: bool) -> dict[str, Any]:
+def _base_card(full_width: bool) -> dict[str, Any]:
     """Return the base Adaptive Card structure."""
     card: dict[str, Any] = {
         "$schema": _SCHEMA_URL,
         "type": "AdaptiveCard",
-        "version": adaptive_card_version,
+        "version": ADAPTIVE_CARD_VERSION,
         "body": [],
     }
     if full_width:
@@ -69,7 +70,6 @@ def build_simple_card_payload(
     *,
     title: str | None,
     message: str,
-    adaptive_card_version: str,
     full_width: bool,
 ) -> dict[str, Any]:
     """Build a simple Adaptive Card payload."""
@@ -77,7 +77,7 @@ def build_simple_card_payload(
     if message_text is None:
         raise ValueError("Message must not be empty")
 
-    card = _base_card(adaptive_card_version, full_width)
+    card = _base_card(full_width)
     body = card["body"]
 
     title_text = _clean_text(title)
@@ -111,8 +111,9 @@ def build_rich_card_payload(
     severity: str,
     facts: Iterable[dict[str, str]] | None,
     actions: Iterable[dict[str, str]] | None,
-    adaptive_card_version: str,
     full_width: bool,
+    image_url: str | None = None,
+    image_alt_text: str | None = None,
 ) -> dict[str, Any]:
     """Build a richer Adaptive Card payload."""
     if severity not in SEVERITIES:
@@ -122,7 +123,7 @@ def build_rich_card_payload(
     if message_text is None:
         raise ValueError("Message must not be empty")
 
-    card = _base_card(adaptive_card_version, full_width)
+    card = _base_card(full_width)
     body = card["body"]
 
     subtitle_text = _clean_text(subtitle)
@@ -159,6 +160,19 @@ def build_rich_card_payload(
             "wrap": True,
         }
     )
+
+    image_source = _clean_text(image_url)
+    if image_source is not None:
+        body.append(
+            {
+                "type": "Image",
+                "url": image_source,
+                "altText": _clean_text(image_alt_text)
+                or title_text
+                or "Notification image",
+                "size": "stretch",
+            }
+        )
 
     fact_items = [
         {

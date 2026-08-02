@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  hacs:
+    uses: ./.github/workflows/hacs.yaml
+
+  hassfest:
+    uses: ./.github/workflows/hassfest.yaml
+
+  tests:
+    uses: ./.github/workflows/tests.yaml
+
+  release:
+    needs:
+      - hacs
+      - hassfest
+      - tests
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Read and validate manifest version
+        id: manifest
+        shell: bash
+        run: |
+          version="$(python -c 'import json; print(json.load(open("custom_components/teams_workflow_notify/manifest.json", encoding="utf-8"))["version"])')"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Manifest version must use X.X.X format: $version" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          echo "branch=release/v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Create tag and release branch if needed
+        env:
+          BRANCH: ${{ steps.manifest.outputs.branch }}
+          TAG: ${{ steps.manifest.outputs.tag }}
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists; leaving it unchanged."
+          else
+            git tag --annotate "$TAG" HEAD --message "Release $TAG"
+            git push origin "$TAG"
+          fi
+
+          release_sha="$(git rev-list --max-count=1 "$TAG")"
+          if git ls-remote --exit-code --heads origin "refs/heads/$BRANCH" >/dev/null 2>&1; then
+            remote_branch="$(git ls-remote --heads origin "refs/heads/$BRANCH")"
+            branch_sha="${remote_branch%%[[:space:]]*}"
+            if [[ "$branch_sha" != "$release_sha" ]]; then
+              echo "Branch $BRANCH exists but does not point to $TAG." >&2
+              exit 1
+            fi
+            echo "Branch $BRANCH already exists at $TAG; leaving it unchanged."
+          else
+            git push origin "$release_sha:refs/heads/$BRANCH"
+          fi
+
+      - name: Create GitHub release if needed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.manifest.outputs.tag }}
+        shell: bash
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; nothing to do."
+          else
+            gh release create "$TAG" --verify-tag --title "$TAG" --generate-notes
+          fi

@@ -4,54 +4,97 @@
     "step": {
       "user": {
         "title": "Add Microsoft Teams Workflow Notify",
-        "description": "Connect a Power Automate Teams webhook workflow. The webhook URL is treated as a secret and should be kept private.",
+        "description": "Connect a Power Automate workflow created with the Teams 'When a Teams webhook request is received' trigger. Setup sends one visible verification card.",
         "data": {
           "webhook_url": "Power Automate webhook URL",
-          "entity_name": "Notify entity name",
+          "entity_name": "Connection name",
           "default_card_title": "Default card title",
-          "adaptive_card_version": "Adaptive Card version",
-          "full_width": "Full-width Teams cards",
-          "verify_webhook": "Verify webhook during setup"
+          "full_width": "Use full-width cards"
+        },
+        "data_description": {
+          "webhook_url": "The secret HTTPS callback URL copied from the saved workflow.",
+          "entity_name": "A friendly name for this Teams channel connection.",
+          "default_card_title": "Used when an action does not provide a title.",
+          "full_width": "Ask the Teams renderer to use the full message width."
+        }
+      },
+      "reconfigure": {
+        "title": "Change webhook URL",
+        "description": "Replace the webhook URL. Home Assistant sends one visible verification card before saving it.",
+        "data": {
+          "webhook_url": "Power Automate webhook URL"
+        },
+        "data_description": {
+          "webhook_url": "The new secret HTTPS callback URL copied from the saved workflow."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reconnect {name}",
+        "description": "The workflow rejected a request. Enter a current webhook URL; Home Assistant sends one visible verification card before saving it.",
+        "data": {
+          "webhook_url": "Power Automate webhook URL"
+        },
+        "data_description": {
+          "webhook_url": "The replacement secret HTTPS callback URL copied from the saved workflow."
         }
       }
     },
     "error": {
-      "invalid_url": "Enter a valid HTTP or HTTPS webhook URL.",
-      "invalid_auth": "The webhook rejected the verification request.",
-      "cannot_connect": "The webhook could not be reached or returned an error.",
-      "unknown": "An unexpected error occurred."
+      "invalid_url": "Enter a valid HTTPS webhook URL without embedded credentials or a fragment.",
+      "invalid_auth": "The workflow rejected the verification request. Confirm that its trigger authentication is set to Anyone and copy a current URL.",
+      "cannot_connect": "The workflow could not be reached or did not accept the request.",
+      "unknown": "An unexpected error occurred while verifying the workflow."
+    },
+    "abort": {
+      "already_configured": "This webhook URL is already configured.",
+      "reauth_successful": "The workflow connection was updated successfully.",
+      "reconfigure_successful": "The webhook URL was updated successfully."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Configure Microsoft Teams Workflow Notify",
-        "description": "Update the default card behavior for this webhook entry.",
+        "description": "Change the connection name and default Adaptive Card presentation. Use Reconfigure on the integration entry to replace the webhook URL.",
         "data": {
-          "webhook_url": "Power Automate webhook URL",
-          "entity_name": "Notify entity name",
+          "entity_name": "Connection name",
           "default_card_title": "Default card title",
-          "adaptive_card_version": "Adaptive Card version",
-          "full_width": "Full-width Teams cards",
-          "verify_webhook": "Verify webhook when saving options"
+          "full_width": "Use full-width cards"
+        },
+        "data_description": {
+          "entity_name": "A friendly name for this Teams channel connection.",
+          "default_card_title": "Used when an action does not provide a title.",
+          "full_width": "Ask the Teams renderer to use the full message width."
         }
       }
+    }
+  },
+  "selector": {
+    "severity": {
+      "options": {
+        "default": "Default",
+        "info": "Information",
+        "success": "Success",
+        "warning": "Warning",
+        "error": "Error"
+      }
     },
-    "error": {
-      "invalid_url": "Enter a valid HTTP or HTTPS webhook URL.",
-      "invalid_auth": "The webhook rejected the verification request.",
-      "cannot_connect": "The webhook could not be reached or returned an error.",
-      "unknown": "An unexpected error occurred."
+    "image_delivery": {
+      "options": {
+        "auto": "Automatic",
+        "url": "External URL",
+        "inline": "Inline image"
+      }
     }
   },
   "services": {
     "send_card": {
       "name": "Send adaptive card",
-      "description": "Send a rich Adaptive Card notification through the configured Microsoft Teams workflow webhook.",
+      "description": "Send a rich Adaptive Card through a configured Microsoft Teams workflow.",
       "fields": {
         "title": {
           "name": "Title",
-          "description": "Optional card title. Defaults to the configured default title."
+          "description": "Optional card title. The configured default is used when omitted."
         },
         "message": {
           "name": "Message",
@@ -59,7 +102,7 @@
         },
         "subtitle": {
           "name": "Subtitle",
-          "description": "Optional subtle subtitle shown above the title."
+          "description": "Optional subtle text shown above the title."
         },
         "severity": {
           "name": "Severity",
@@ -67,13 +110,57 @@
         },
         "facts": {
           "name": "Facts",
-          "description": "Optional list of title/value objects rendered as a FactSet."
+          "description": "Optional list of title and value objects rendered as a FactSet."
         },
         "actions": {
           "name": "Actions",
-          "description": "Optional list of title/url objects rendered as Action.OpenUrl buttons."
+          "description": "Optional list of up to six title and URL objects rendered as open-link buttons."
+        },
+        "image_url": {
+          "name": "Image source",
+          "description": "Optional public HTTPS URL, Base64 data URI, /local/ URL, or file path inside Home Assistant's www directory for a PNG, JPEG, or GIF image."
+        },
+        "image_delivery": {
+          "name": "Image delivery",
+          "description": "Auto uses Home Assistant's external HTTPS URL for compatible local images and otherwise embeds an optimized copy. URL requires external HTTPS access and a Teams-compatible local image; inline always embeds a normalized image."
+        },
+        "image_alt_text": {
+          "name": "Image alternative text",
+          "description": "Optional accessible description of the image. The card title is used when omitted."
         }
       }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "The Microsoft Teams workflow rejected the request. Reconfigure the integration with a current webhook URL."
+    },
+    "connection_error": {
+      "message": "Home Assistant could not reach the Microsoft Teams workflow."
+    },
+    "invalid_message": {
+      "message": "The notification message must not be empty."
+    },
+    "invalid_image": {
+      "message": "The card image is missing, unsupported, outside Home Assistant's www directory, or cannot be safely used."
+    },
+    "image_too_large": {
+      "message": "The card image could not be reduced enough to fit within the Microsoft Teams message-size limit. Shorten the card text or use an externally accessible image URL."
+    },
+    "external_image_url_unavailable": {
+      "message": "Home Assistant does not have a configured external HTTPS or cloud URL for this local image. Use automatic or inline image delivery, or configure secure remote access."
+    },
+    "invalid_webhook_url": {
+      "message": "The stored Microsoft Teams workflow URL is invalid. Reconfigure the integration."
+    },
+    "payload_too_large": {
+      "message": "The Adaptive Card payload is {size} bytes, exceeding the Microsoft Teams connector limit of {limit} bytes."
+    },
+    "response_error": {
+      "message": "The Microsoft Teams workflow returned HTTP status {status}."
+    },
+    "send_failed": {
+      "message": "The Microsoft Teams workflow notification could not be sent."
     }
   }
 }

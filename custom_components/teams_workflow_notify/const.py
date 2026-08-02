@@ -3,24 +3,19 @@
 from __future__ import annotations
 
 DOMAIN = "teams_workflow_notify"
-PLATFORMS: list[str] = ["notify"]
 
 CONF_WEBHOOK_URL = "webhook_url"
 CONF_ENTITY_NAME = "entity_name"
 CONF_DEFAULT_CARD_TITLE = "default_card_title"
-CONF_ADAPTIVE_CARD_VERSION = "adaptive_card_version"
 CONF_FULL_WIDTH = "full_width"
-CONF_VERIFY_WEBHOOK = "verify_webhook"
 
 DEFAULT_ENTITY_NAME = "Teams Workflow"
 DEFAULT_CARD_TITLE = "Home Assistant"
-DEFAULT_ADAPTIVE_CARD_VERSION = "1.2"
 DEFAULT_FULL_WIDTH = True
-DEFAULT_VERIFY_WEBHOOK = True
 DEFAULT_VERIFICATION_TITLE = "Microsoft Teams Workflow Notify"
 DEFAULT_VERIFICATION_MESSAGE = "Webhook verification from Home Assistant succeeded."
 
-ADAPTIVE_CARD_VERSIONS: tuple[str, ...] = ("1.2", "1.3", "1.4", "1.5")
+ADAPTIVE_CARD_VERSION = "1.2"
 
 SERVICE_SEND_CARD = "send_card"
 
@@ -30,6 +25,18 @@ ATTR_FACTS = "facts"
 ATTR_ACTIONS = "actions"
 ATTR_FACT_VALUE = "value"
 ATTR_ACTION_URL = "url"
+ATTR_IMAGE_URL = "image_url"
+ATTR_IMAGE_ALT_TEXT = "image_alt_text"
+ATTR_IMAGE_DELIVERY = "image_delivery"
+
+IMAGE_DELIVERY_AUTO = "auto"
+IMAGE_DELIVERY_URL = "url"
+IMAGE_DELIVERY_INLINE = "inline"
+IMAGE_DELIVERY_MODES: tuple[str, ...] = (
+    IMAGE_DELIVERY_AUTO,
+    IMAGE_DELIVERY_URL,
+    IMAGE_DELIVERY_INLINE,
+)
 
 SEVERITY_DEFAULT = "default"
 SEVERITY_INFO = "info"
@@ -45,3 +52,10 @@ SEVERITIES: tuple[str, ...] = (
 )
 
 REQUEST_TIMEOUT_SECONDS = 10
+MAX_PAYLOAD_SIZE_BYTES = 28 * 1024
+IMAGE_PAYLOAD_SAFETY_MARGIN_BYTES = 1024
+MAX_IMAGE_INPUT_SIZE_BYTES = 10 * 1024 * 1024
+MAX_EXTERNAL_IMAGE_SIZE_BYTES = 1024 * 1024
+MAX_IMAGE_PIXELS = 20_000_000
+MAX_IMAGE_DIMENSION = 1024
+MIN_IMAGE_LONG_EDGE = 160

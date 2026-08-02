@@ -2,41 +2,12 @@
 
 from __future__ import annotations
 
-import importlib.util
-import sys
-import types
-from pathlib import Path
+import pytest
 
-_ROOT = Path(__file__).resolve().parents[1] / "custom_components" / "teams_workflow_notify"
-_PKG_NAME = "custom_components.teams_workflow_notify"
-
-
-def _load_card_module():
-    custom_components_pkg = types.ModuleType("custom_components")
-    custom_components_pkg.__path__ = [str(_ROOT.parent)]
-    sys.modules["custom_components"] = custom_components_pkg
-
-    pkg = types.ModuleType(_PKG_NAME)
-    pkg.__path__ = [str(_ROOT)]
-    sys.modules[_PKG_NAME] = pkg
-
-    const_spec = importlib.util.spec_from_file_location(f"{_PKG_NAME}.const", _ROOT / "const.py")
-    const_mod = importlib.util.module_from_spec(const_spec)
-    sys.modules[f"{_PKG_NAME}.const"] = const_mod
-    assert const_spec.loader is not None
-    const_spec.loader.exec_module(const_mod)
-
-    card_spec = importlib.util.spec_from_file_location(f"{_PKG_NAME}.card", _ROOT / "card.py")
-    card_mod = importlib.util.module_from_spec(card_spec)
-    sys.modules[f"{_PKG_NAME}.card"] = card_mod
-    assert card_spec.loader is not None
-    card_spec.loader.exec_module(card_mod)
-    return card_mod
-
-
-_CARD = _load_card_module()
-build_rich_card_payload = _CARD.build_rich_card_payload
-build_simple_card_payload = _CARD.build_simple_card_payload
+from custom_components.teams_workflow_notify.card import (
+    build_rich_card_payload,
+    build_simple_card_payload,
+)
 
 
 def _card_content(payload: dict) -> dict:
@@ -44,135 +15,211 @@ def _card_content(payload: dict) -> dict:
 
 
 def test_simple_card_includes_title_and_message() -> None:
+    """A simple notification should produce a valid Teams envelope."""
     payload = build_simple_card_payload(
-        title="Garage Door",
-        message="Garage has been open for 20 minutes.",
-        adaptive_card_version="1.2",
+        title=" Garage Door ",
+        message=" Garage has been open for 20 minutes. ",
         full_width=True,
     )
 
     content = _card_content(payload)
     assert payload["type"] == "message"
+    assert payload["attachments"][0]["contentType"] == (
+        "application/vnd.microsoft.card.adaptive"
+    )
+    assert payload["attachments"][0]["contentUrl"] is None
+    assert content["$schema"] == "http://adaptivecards.io/schemas/adaptive-card.json"
+    assert content["version"] == "1.2"
     assert content["body"][0]["text"] == "Garage Door"
     assert content["body"][0]["weight"] == "bolder"
     assert content["body"][0]["size"] == "medium"
     assert content["body"][1]["text"] == "Garage has been open for 20 minutes."
-
-
-def test_full_width_true_includes_msteams_width() -> None:
-    payload = build_simple_card_payload(
-        title="Title",
-        message="Message",
-        adaptive_card_version="1.2",
-        full_width=True,
-    )
-
-    content = _card_content(payload)
     assert content["msteams"]["width"] == "Full"
 
 
-def test_full_width_false_omits_msteams() -> None:
+def test_simple_card_without_title() -> None:
+    """A blank title should be omitted."""
     payload = build_simple_card_payload(
-        title="Title",
+        title="  ",
         message="Message",
-        adaptive_card_version="1.2",
         full_width=False,
     )
 
     content = _card_content(payload)
+    assert content["body"] == [{"type": "TextBlock", "text": "Message", "wrap": True}]
     assert "msteams" not in content
 
 
-def test_severity_warning_maps_to_warning_color() -> None:
+@pytest.mark.parametrize("message", ["", "   "])
+def test_simple_card_rejects_empty_message(message: str) -> None:
+    """Empty messages should fail before a webhook request is made."""
+    with pytest.raises(ValueError, match="must not be empty"):
+        build_simple_card_payload(
+            title="Title",
+            message=message,
+            full_width=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("severity", "expected_color"),
+    [
+        ("default", None),
+        ("info", "accent"),
+        ("success", "good"),
+        ("warning", "warning"),
+        ("error", "attention"),
+    ],
+)
+def test_rich_card_severity(severity: str, expected_color: str | None) -> None:
+    """Severity should map to the supported Adaptive Card color."""
+    payload = build_rich_card_payload(
+        title="Garage Door",
+        message="Open",
+        subtitle=None,
+        severity=severity,
+        facts=None,
+        actions=None,
+        full_width=True,
+    )
+
+    title = _card_content(payload)["body"][0]
+    if expected_color is None:
+        assert "color" not in title
+    else:
+        assert title["color"] == expected_color
+
+
+def test_rich_card_includes_all_optional_content() -> None:
+    """Subtitle, facts, and actions should use Teams-compatible casing."""
     payload = build_rich_card_payload(
         title="Garage Door",
         message="Garage has been open for 20 minutes.",
-        subtitle=None,
+        subtitle=" Home Assistant ",
         severity="warning",
-        facts=None,
-        actions=None,
-        adaptive_card_version="1.2",
-        full_width=True,
-    )
-
-    content = _card_content(payload)
-    assert content["body"][0]["color"] == "warning"
-
-
-def test_subtitle_uses_small_size() -> None:
-    payload = build_rich_card_payload(
-        title="Garage Door",
-        message="Garage has been open for 20 minutes.",
-        subtitle="Home Assistant",
-        severity="default",
-        facts=None,
-        actions=None,
-        adaptive_card_version="1.2",
-        full_width=True,
-    )
-
-    content = _card_content(payload)
-    assert content["body"][0]["size"] == "small"
-
-
-def test_facts_render_as_factset() -> None:
-    payload = build_rich_card_payload(
-        title="Garage Door",
-        message="Garage has been open for 20 minutes.",
-        subtitle=None,
-        severity="default",
         facts=[
-            {"title": "Entity", "value": "cover.garage_door"},
+            {"title": " Entity ", "value": " cover.garage_door "},
             {"title": "Time", "value": "10:42 PM"},
         ],
-        actions=None,
-        adaptive_card_version="1.2",
-        full_width=True,
-    )
-
-    content = _card_content(payload)
-    factset = content["body"][-1]
-    assert factset["type"] == "FactSet"
-    assert factset["facts"][0]["title"] == "Entity"
-    assert factset["facts"][0]["value"] == "cover.garage_door"
-
-
-def test_open_url_actions_render_correctly() -> None:
-    payload = build_rich_card_payload(
-        title="Garage Door",
-        message="Garage has been open for 20 minutes.",
-        subtitle=None,
-        severity="default",
-        facts=None,
         actions=[
             {
-                "title": "Open Home Assistant",
-                "url": "https://ha.example.com/lovelace/security",
+                "title": " Open Home Assistant ",
+                "url": " https://ha.example.com/lovelace/security ",
             }
         ],
-        adaptive_card_version="1.2",
         full_width=True,
     )
 
     content = _card_content(payload)
-    assert content["actions"][0]["type"] == "Action.OpenUrl"
-    assert content["actions"][0]["title"] == "Open Home Assistant"
-    assert content["actions"][0]["url"] == "https://ha.example.com/lovelace/security"
+    assert content["body"][0] == {
+        "type": "TextBlock",
+        "text": "Home Assistant",
+        "isSubtle": True,
+        "size": "small",
+        "wrap": True,
+        "spacing": "none",
+    }
+    factset = content["body"][-1]
+    assert factset["type"] == "FactSet"
+    assert factset["facts"][0] == {
+        "title": "Entity",
+        "value": "cover.garage_door",
+    }
+    assert content["actions"] == [
+        {
+            "type": "Action.OpenUrl",
+            "title": "Open Home Assistant",
+            "url": "https://ha.example.com/lovelace/security",
+        }
+    ]
 
 
-def test_empty_optional_fields_do_not_create_broken_card_json() -> None:
+def test_empty_optional_items_are_omitted() -> None:
+    """Blank optional values should not produce malformed card elements."""
     payload = build_rich_card_payload(
         title="",
         message="System status nominal.",
         subtitle="",
         severity="default",
-        facts=[{"title": "", "value": "ignored"}],
-        actions=[{"title": "", "url": "https://example.com"}],
-        adaptive_card_version="1.2",
+        facts=[
+            {"title": "", "value": "ignored"},
+            {"title": "Ignored", "value": ""},
+        ],
+        actions=[
+            {"title": "", "url": "https://example.com"},
+            {"title": "Ignored", "url": ""},
+        ],
         full_width=False,
     )
 
     content = _card_content(payload)
-    assert len(content["body"]) == 1
-    assert content["body"][0]["text"] == "System status nominal."
+    assert content["body"] == [
+        {"type": "TextBlock", "text": "System status nominal.", "wrap": True}
+    ]
     assert "actions" not in content
+
+
+def test_rich_card_rejects_invalid_input() -> None:
+    """The card builder should reject unsupported severity and empty messages."""
+    with pytest.raises(ValueError, match="Unsupported severity"):
+        build_rich_card_payload(
+            title="Title",
+            message="Message",
+            subtitle=None,
+            severity="critical",
+            facts=None,
+            actions=None,
+            full_width=True,
+        )
+
+    with pytest.raises(ValueError, match="must not be empty"):
+        build_rich_card_payload(
+            title="Title",
+            message=" ",
+            subtitle=None,
+            severity="default",
+            facts=None,
+            actions=None,
+            full_width=True,
+        )
+
+
+def test_rich_card_includes_inline_image_with_accessible_fallback() -> None:
+    """A Base64 image should remain inline and have useful alternative text."""
+    payload = build_rich_card_payload(
+        title="Front door",
+        message="Motion detected",
+        subtitle=None,
+        severity="warning",
+        facts=None,
+        actions=None,
+        full_width=True,
+        image_url="data:image/png;base64,iVBORw0KGgo=",
+    )
+
+    image = _card_content(payload)["body"][-1]
+    assert image == {
+        "type": "Image",
+        "url": "data:image/png;base64,iVBORw0KGgo=",
+        "altText": "Front door",
+        "size": "stretch",
+    }
+
+
+def test_rich_card_uses_explicit_image_alt_text() -> None:
+    """Explicit image alternative text should override the title fallback."""
+    payload = build_rich_card_payload(
+        title="Front door",
+        message="Motion detected",
+        subtitle=None,
+        severity="warning",
+        facts=None,
+        actions=None,
+        full_width=True,
+        image_url="https://cdn.example.com/front-door.jpg",
+        image_alt_text="A person standing on the front porch",
+    )
+
+    assert _card_content(payload)["body"][-1]["altText"] == (
+        "A person standing on the front porch"
+    )

@@ -1,0 +1,70 @@
+{
+  "title": "Microsoft Teams Workflow Notify",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Ajouter Microsoft Teams Workflow Notify",
+        "description": "Connecte un flux Power Automate créé avec le déclencheur Teams « When a Teams webhook request is received ». La configuration envoie une carte de vérification visible.",
+        "data": { "webhook_url": "URL du webhook Power Automate", "entity_name": "Nom de la connexion", "default_card_title": "Titre de carte par défaut", "full_width": "Utiliser des cartes en pleine largeur" },
+        "data_description": { "webhook_url": "L’URL secrète de rappel HTTPS copiée depuis le flux enregistré.", "entity_name": "Un nom convivial pour cette connexion au canal Teams.", "default_card_title": "Utilisé lorsqu’une action ne fournit pas de titre.", "full_width": "Demande au moteur de rendu Teams d’utiliser toute la largeur du message." }
+      },
+      "reconfigure": {
+        "title": "Modifier l’URL du webhook",
+        "description": "Remplace l’URL du webhook. Home Assistant envoie une carte de vérification visible avant l’enregistrement.",
+        "data": { "webhook_url": "URL du webhook Power Automate" },
+        "data_description": { "webhook_url": "La nouvelle URL secrète de rappel HTTPS copiée depuis le flux enregistré." }
+      },
+      "reauth_confirm": {
+        "title": "Reconnecter {name}",
+        "description": "Le flux a rejeté une requête. Saisissez une URL de webhook actuelle ; Home Assistant envoie une carte de vérification visible avant l’enregistrement.",
+        "data": { "webhook_url": "URL du webhook Power Automate" },
+        "data_description": { "webhook_url": "L’URL secrète HTTPS de remplacement copiée depuis le flux enregistré." }
+      }
+    },
+    "error": { "invalid_url": "Saisissez une URL de webhook HTTPS valide, sans identifiants intégrés ni fragment.", "invalid_auth": "Le flux a rejeté la requête de vérification. Vérifiez que l’authentification du déclencheur est définie sur « Anyone » et copiez une URL actuelle.", "cannot_connect": "Le flux n’a pas pu être joint ou n’a pas accepté la requête.", "unknown": "Une erreur inattendue s’est produite lors de la vérification du flux." },
+    "abort": { "already_configured": "Cette URL de webhook est déjà configurée.", "reauth_successful": "La connexion au flux a été mise à jour.", "reconfigure_successful": "L’URL du webhook a été mise à jour." }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configurer Microsoft Teams Workflow Notify",
+        "description": "Modifiez le nom de la connexion et la présentation par défaut de l’Adaptive Card. Utilisez Reconfigurer sur l’entrée de l’intégration pour remplacer l’URL du webhook.",
+        "data": { "entity_name": "Nom de la connexion", "default_card_title": "Titre de carte par défaut", "full_width": "Utiliser des cartes en pleine largeur" },
+        "data_description": { "entity_name": "Un nom convivial pour cette connexion au canal Teams.", "default_card_title": "Utilisé lorsqu’une action ne fournit pas de titre.", "full_width": "Demande au moteur de rendu Teams d’utiliser toute la largeur du message." }
+      }
+    }
+  },
+  "selector": {
+    "severity": { "options": { "default": "Par défaut", "info": "Information", "success": "Succès", "warning": "Avertissement", "error": "Erreur" } },
+    "image_delivery": { "options": { "auto": "Automatique", "url": "URL externe", "inline": "Image intégrée" } }
+  },
+  "services": {
+    "send_card": {
+      "name": "Envoyer une carte adaptative",
+      "description": "Envoie une Adaptive Card enrichie via un flux Microsoft Teams configuré.",
+      "fields": {
+        "title": { "name": "Titre", "description": "Titre facultatif de la carte. La valeur par défaut configurée est utilisée s’il est omis." },
+        "message": { "name": "Message", "description": "Corps principal du message à inclure dans l’Adaptive Card." },
+        "subtitle": { "name": "Sous-titre", "description": "Texte discret facultatif affiché au-dessus du titre." },
+        "severity": { "name": "Gravité", "description": "Style visuel de gravité du titre de la carte." },
+        "facts": { "name": "Faits", "description": "Liste facultative d’objets titre-valeur affichés sous forme de FactSet." },
+        "actions": { "name": "Actions", "description": "Liste facultative comprenant jusqu’à six objets titre-URL affichés sous forme de boutons de lien." },
+        "image_url": { "name": "Source de l’image", "description": "URL HTTPS publique, URI de données Base64, URL /local/ ou chemin de fichier facultatif dans le répertoire www de Home Assistant pour une image PNG, JPEG ou GIF." },
+        "image_delivery": { "name": "Transmission de l’image", "description": "Automatique utilise l’URL HTTPS externe de Home Assistant pour les images locales compatibles et intègre sinon une copie optimisée. URL exige un accès HTTPS externe et une image locale compatible avec Teams ; intégrée normalise toujours l’image." },
+        "image_alt_text": { "name": "Texte alternatif de l’image", "description": "Description accessible facultative de l’image. Le titre de la carte est utilisé si elle est omise." }
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": { "message": "Le flux Microsoft Teams a rejeté la requête. Reconfigurez l’intégration avec une URL de webhook actuelle." },
+    "connection_error": { "message": "Home Assistant n’a pas pu joindre le flux Microsoft Teams." },
+    "invalid_message": { "message": "Le message de notification ne doit pas être vide." },
+    "invalid_image": { "message": "L’image de la carte est absente, non prise en charge, située hors du répertoire www de Home Assistant ou ne peut pas être utilisée en toute sécurité." },
+    "image_too_large": { "message": "L’image de la carte n’a pas pu être suffisamment réduite pour respecter la limite de taille des messages Microsoft Teams. Raccourcissez le texte de la carte ou utilisez une URL d’image accessible de l’extérieur." },
+    "external_image_url_unavailable": { "message": "Home Assistant ne dispose d’aucune URL HTTPS externe ou cloud configurée pour cette image locale. Utilisez la transmission automatique ou intégrée, ou configurez un accès distant sécurisé." },
+    "invalid_webhook_url": { "message": "L’URL enregistrée du flux Microsoft Teams n’est pas valide. Reconfigurez l’intégration." },
+    "payload_too_large": { "message": "La charge utile de l’Adaptive Card fait {size} octets et dépasse la limite de {limit} octets du connecteur Microsoft Teams." },
+    "response_error": { "message": "Le flux Microsoft Teams a renvoyé le statut HTTP {status}." },
+    "send_failed": { "message": "La notification du flux Microsoft Teams n’a pas pu être envoyée." }
+  }
+}

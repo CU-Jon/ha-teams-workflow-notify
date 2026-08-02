@@ -1,0 +1,70 @@
+{
+  "title": "Microsoft Teams Workflow Notify",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Microsoft Teams Workflow Notify toevoegen",
+        "description": "Verbind een Power Automate-flow die is gemaakt met de Teams-trigger 'When a Teams webhook request is received'. Tijdens de configuratie wordt één zichtbare verificatiekaart verzonden.",
+        "data": { "webhook_url": "Power Automate-webhook-URL", "entity_name": "Naam van verbinding", "default_card_title": "Standaardtitel van kaart", "full_width": "Kaarten over volledige breedte gebruiken" },
+        "data_description": { "webhook_url": "De geheime HTTPS-callback-URL die uit de opgeslagen flow is gekopieerd.", "entity_name": "Een herkenbare naam voor deze Teams-kanaalverbinding.", "default_card_title": "Wordt gebruikt wanneer een actie geen titel opgeeft.", "full_width": "Vraag de Teams-renderer om de volledige berichtbreedte te gebruiken." }
+      },
+      "reconfigure": {
+        "title": "Webhook-URL wijzigen",
+        "description": "Vervang de webhook-URL. Home Assistant verzendt vóór het opslaan één zichtbare verificatiekaart.",
+        "data": { "webhook_url": "Power Automate-webhook-URL" },
+        "data_description": { "webhook_url": "De nieuwe geheime HTTPS-callback-URL die uit de opgeslagen flow is gekopieerd." }
+      },
+      "reauth_confirm": {
+        "title": "{name} opnieuw verbinden",
+        "description": "De flow heeft een verzoek geweigerd. Voer een actuele webhook-URL in; Home Assistant verzendt vóór het opslaan één zichtbare verificatiekaart.",
+        "data": { "webhook_url": "Power Automate-webhook-URL" },
+        "data_description": { "webhook_url": "De vervangende geheime HTTPS-URL die uit de opgeslagen flow is gekopieerd." }
+      }
+    },
+    "error": { "invalid_url": "Voer een geldige HTTPS-webhook-URL in zonder ingesloten aanmeldgegevens of fragment.", "invalid_auth": "De flow heeft het verificatieverzoek geweigerd. Controleer of de triggerverificatie is ingesteld op 'Anyone' en kopieer een actuele URL.", "cannot_connect": "De flow kon niet worden bereikt of heeft het verzoek niet geaccepteerd.", "unknown": "Er is een onverwachte fout opgetreden tijdens het verifiëren van de flow." },
+    "abort": { "already_configured": "Deze webhook-URL is al geconfigureerd.", "reauth_successful": "De flowverbinding is bijgewerkt.", "reconfigure_successful": "De webhook-URL is bijgewerkt." }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Microsoft Teams Workflow Notify configureren",
+        "description": "Wijzig de naam van de verbinding en de standaardweergave van de Adaptive Card. Gebruik Opnieuw configureren bij de integratie om de webhook-URL te vervangen.",
+        "data": { "entity_name": "Naam van verbinding", "default_card_title": "Standaardtitel van kaart", "full_width": "Kaarten over volledige breedte gebruiken" },
+        "data_description": { "entity_name": "Een herkenbare naam voor deze Teams-kanaalverbinding.", "default_card_title": "Wordt gebruikt wanneer een actie geen titel opgeeft.", "full_width": "Vraag de Teams-renderer om de volledige berichtbreedte te gebruiken." }
+      }
+    }
+  },
+  "selector": {
+    "severity": { "options": { "default": "Standaard", "info": "Informatie", "success": "Geslaagd", "warning": "Waarschuwing", "error": "Fout" } },
+    "image_delivery": { "options": { "auto": "Automatisch", "url": "Externe URL", "inline": "Ingesloten afbeelding" } }
+  },
+  "services": {
+    "send_card": {
+      "name": "Adaptieve kaart verzenden",
+      "description": "Verzend een uitgebreide Adaptive Card via een geconfigureerde Microsoft Teams-flow.",
+      "fields": {
+        "title": { "name": "Titel", "description": "Optionele kaarttitel. De geconfigureerde standaard wordt gebruikt als deze ontbreekt." },
+        "message": { "name": "Bericht", "description": "Hoofdtekst die in de Adaptive Card wordt opgenomen." },
+        "subtitle": { "name": "Ondertitel", "description": "Optionele subtiele tekst boven de titel." },
+        "severity": { "name": "Ernst", "description": "Visuele ernststijl voor de kaarttitel." },
+        "facts": { "name": "Feiten", "description": "Optionele lijst met titel- en waardeobjecten die als FactSet wordt weergegeven." },
+        "actions": { "name": "Acties", "description": "Optionele lijst van maximaal zes titel- en URL-objecten die als linkknoppen worden weergegeven." },
+        "image_url": { "name": "Afbeeldingsbron", "description": "Optionele openbare HTTPS-URL, Base64-data-URI, /local/-URL of bestandspad binnen de www-map van Home Assistant voor een PNG-, JPEG- of GIF-afbeelding." },
+        "image_delivery": { "name": "Afbeeldingslevering", "description": "Automatisch gebruikt de externe HTTPS-URL van Home Assistant voor compatibele lokale afbeeldingen en sluit anders een geoptimaliseerde kopie in. URL vereist externe HTTPS-toegang en een Teams-compatibele lokale afbeelding; ingesloten normaliseert de afbeelding altijd." },
+        "image_alt_text": { "name": "Alternatieve tekst van afbeelding", "description": "Optionele toegankelijke beschrijving van de afbeelding. Als deze ontbreekt, wordt de kaarttitel gebruikt." }
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": { "message": "De Microsoft Teams-flow heeft het verzoek geweigerd. Configureer de integratie opnieuw met een actuele webhook-URL." },
+    "connection_error": { "message": "Home Assistant kon de Microsoft Teams-flow niet bereiken." },
+    "invalid_message": { "message": "Het meldingsbericht mag niet leeg zijn." },
+    "invalid_image": { "message": "De kaartafbeelding ontbreekt, wordt niet ondersteund, bevindt zich buiten de www-map van Home Assistant of kan niet veilig worden gebruikt." },
+    "image_too_large": { "message": "De kaartafbeelding kon niet voldoende worden verkleind om binnen de berichtlimiet van Microsoft Teams te passen. Verkort de kaarttekst of gebruik een extern bereikbare afbeeldings-URL." },
+    "external_image_url_unavailable": { "message": "Home Assistant heeft geen geconfigureerde externe HTTPS- of cloud-URL voor deze lokale afbeelding. Gebruik automatische of ingesloten levering of configureer veilige externe toegang." },
+    "invalid_webhook_url": { "message": "De opgeslagen URL van de Microsoft Teams-flow is ongeldig. Configureer de integratie opnieuw." },
+    "payload_too_large": { "message": "De Adaptive Card-payload is {size} bytes en overschrijdt de Microsoft Teams-connectorlimiet van {limit} bytes." },
+    "response_error": { "message": "De Microsoft Teams-flow heeft HTTP-status {status} geretourneerd." },
+    "send_failed": { "message": "De melding voor de Microsoft Teams-flow kon niet worden verzonden." }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "title": "Microsoft Teams Workflow Notify",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Microsoft Teams Workflow Notify hinzufügen",
+        "description": "Verbindet einen Power-Automate-Workflow, der mit dem Teams-Trigger „When a Teams webhook request is received“ erstellt wurde. Bei der Einrichtung wird eine sichtbare Testkarte gesendet.",
+        "data": {
+          "webhook_url": "Power-Automate-Webhook-URL",
+          "entity_name": "Verbindungsname",
+          "default_card_title": "Standardtitel der Karte",
+          "full_width": "Karten in voller Breite verwenden"
+        },
+        "data_description": {
+          "webhook_url": "Die geheime HTTPS-Rückruf-URL aus dem gespeicherten Workflow.",
+          "entity_name": "Ein aussagekräftiger Name für diese Teams-Kanalverbindung.",
+          "default_card_title": "Wird verwendet, wenn eine Aktion keinen Titel angibt.",
+          "full_width": "Fordert Teams auf, die gesamte Nachrichtenbreite zu verwenden."
+        }
+      },
+      "reconfigure": {
+        "title": "Webhook-URL ändern",
+        "description": "Ersetzt die Webhook-URL. Home Assistant sendet vor dem Speichern eine sichtbare Testkarte.",
+        "data": { "webhook_url": "Power-Automate-Webhook-URL" },
+        "data_description": { "webhook_url": "Die neue geheime HTTPS-Rückruf-URL aus dem gespeicherten Workflow." }
+      },
+      "reauth_confirm": {
+        "title": "{name} erneut verbinden",
+        "description": "Der Workflow hat eine Anfrage abgelehnt. Gib eine aktuelle Webhook-URL ein; Home Assistant sendet vor dem Speichern eine sichtbare Testkarte.",
+        "data": { "webhook_url": "Power-Automate-Webhook-URL" },
+        "data_description": { "webhook_url": "Die geheime HTTPS-Ersatz-URL aus dem gespeicherten Workflow." }
+      }
+    },
+    "error": {
+      "invalid_url": "Gib eine gültige HTTPS-Webhook-URL ohne eingebettete Anmeldedaten oder Fragment ein.",
+      "invalid_auth": "Der Workflow hat die Testanfrage abgelehnt. Prüfe, ob die Triggerauthentifizierung auf „Anyone“ gesetzt ist, und kopiere eine aktuelle URL.",
+      "cannot_connect": "Der Workflow konnte nicht erreicht werden oder hat die Anfrage nicht akzeptiert.",
+      "unknown": "Beim Überprüfen des Workflows ist ein unerwarteter Fehler aufgetreten."
+    },
+    "abort": {
+      "already_configured": "Diese Webhook-URL ist bereits konfiguriert.",
+      "reauth_successful": "Die Workflow-Verbindung wurde erfolgreich aktualisiert.",
+      "reconfigure_successful": "Die Webhook-URL wurde erfolgreich aktualisiert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Microsoft Teams Workflow Notify konfigurieren",
+        "description": "Ändere den Verbindungsnamen und die Standarddarstellung der Adaptive Card. Verwende „Neu konfigurieren“ beim Integrationseintrag, um die Webhook-URL zu ersetzen.",
+        "data": {
+          "entity_name": "Verbindungsname",
+          "default_card_title": "Standardtitel der Karte",
+          "full_width": "Karten in voller Breite verwenden"
+        },
+        "data_description": {
+          "entity_name": "Ein aussagekräftiger Name für diese Teams-Kanalverbindung.",
+          "default_card_title": "Wird verwendet, wenn eine Aktion keinen Titel angibt.",
+          "full_width": "Fordert Teams auf, die gesamte Nachrichtenbreite zu verwenden."
+        }
+      }
+    }
+  },
+  "selector": {
+    "severity": { "options": { "default": "Standard", "info": "Information", "success": "Erfolg", "warning": "Warnung", "error": "Fehler" } },
+    "image_delivery": { "options": { "auto": "Automatisch", "url": "Externe URL", "inline": "Eingebettetes Bild" } }
+  },
+  "services": {
+    "send_card": {
+      "name": "Adaptive Card senden",
+      "description": "Sendet eine umfangreiche Adaptive Card über einen konfigurierten Microsoft-Teams-Workflow.",
+      "fields": {
+        "title": { "name": "Titel", "description": "Optionaler Kartentitel. Wenn er fehlt, wird der konfigurierte Standard verwendet." },
+        "message": { "name": "Nachricht", "description": "Haupttext der Adaptive Card." },
+        "subtitle": { "name": "Untertitel", "description": "Optionaler dezenter Text über dem Titel." },
+        "severity": { "name": "Schweregrad", "description": "Visueller Schweregrad für den Kartentitel." },
+        "facts": { "name": "Fakten", "description": "Optionale Liste von Titel-Wert-Objekten, die als FactSet dargestellt wird." },
+        "actions": { "name": "Aktionen", "description": "Optionale Liste mit bis zu sechs Titel-URL-Objekten, die als Linkschaltflächen dargestellt werden." },
+        "image_url": { "name": "Bildquelle", "description": "Optionale öffentliche HTTPS-URL, Base64-Daten-URI, /local/-URL oder Dateipfad im www-Verzeichnis von Home Assistant für ein PNG-, JPEG- oder GIF-Bild." },
+        "image_delivery": { "name": "Bildübermittlung", "description": "Automatisch verwendet für kompatible lokale Bilder die externe HTTPS-URL von Home Assistant und bettet andernfalls eine optimierte Kopie ein. URL erfordert externen HTTPS-Zugriff und ein Teams-kompatibles lokales Bild; eingebettet normalisiert das Bild immer." },
+        "image_alt_text": { "name": "Alternativtext des Bildes", "description": "Optionale barrierefreie Beschreibung des Bildes. Fehlt sie, wird der Kartentitel verwendet." }
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": { "message": "Der Microsoft-Teams-Workflow hat die Anfrage abgelehnt. Konfiguriere die Integration mit einer aktuellen Webhook-URL neu." },
+    "connection_error": { "message": "Home Assistant konnte den Microsoft-Teams-Workflow nicht erreichen." },
+    "invalid_message": { "message": "Die Benachrichtigung darf nicht leer sein." },
+    "invalid_image": { "message": "Das Kartenbild fehlt, wird nicht unterstützt, liegt außerhalb des www-Verzeichnisses von Home Assistant oder kann nicht sicher verwendet werden." },
+    "image_too_large": { "message": "Das Kartenbild konnte nicht ausreichend für die Microsoft-Teams-Nachrichtengröße verkleinert werden. Kürze den Kartentext oder verwende eine extern erreichbare Bild-URL." },
+    "external_image_url_unavailable": { "message": "Home Assistant hat keine konfigurierte externe HTTPS- oder Cloud-URL für dieses lokale Bild. Verwende automatische oder eingebettete Bildübermittlung oder richte einen sicheren Fernzugriff ein." },
+    "invalid_webhook_url": { "message": "Die gespeicherte Microsoft-Teams-Workflow-URL ist ungültig. Konfiguriere die Integration neu." },
+    "payload_too_large": { "message": "Die Adaptive-Card-Nutzlast ist {size} Byte groß und überschreitet das Microsoft-Teams-Connector-Limit von {limit} Byte." },
+    "response_error": { "message": "Der Microsoft-Teams-Workflow hat den HTTP-Status {status} zurückgegeben." },
+    "send_failed": { "message": "Die Benachrichtigung an den Microsoft-Teams-Workflow konnte nicht gesendet werden." }
+  }
+}
