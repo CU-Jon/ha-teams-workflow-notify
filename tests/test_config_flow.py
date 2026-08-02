@@ -228,6 +228,7 @@ async def test_reconfigure_updates_verified_url(hass) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_WEBHOOK_URL: NEW_WEBHOOK_URL}
         )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -297,6 +298,7 @@ async def test_reauth_updates_verified_url(hass) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_WEBHOOK_URL: NEW_WEBHOOK_URL}
         )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
